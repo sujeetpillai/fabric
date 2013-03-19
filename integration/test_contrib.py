@@ -1,6 +1,6 @@
 import types
 
-from fabric.api import env
+from fabric.api import env, run
 from fabric.contrib import files
 
 
