@@ -25,7 +25,7 @@ def exists(path, use_sudo=False, verbose=False):
     behavior.
     """
     func = use_sudo and sudo or run
-    cmd = 'test -e %s' % _expand_path(path)
+    cmd = 'test -e "$(echo %s)"' % path
     # If verbose, run normally
     if verbose:
         with settings(warn_only=True):
@@ -81,7 +81,7 @@ def upload_template(filename, destination, context=None, use_jinja=False,
     func = use_sudo and sudo or run
     # Normalize destination to be an actual filename, due to using StringIO
     with settings(hide('everything'), warn_only=True):
-        if func('test -d %s' % _expand_path(destination)).succeeded:
+        if func('test -d %s' % destination).succeeded:
             sep = "" if destination.endswith('/') else "/"
             destination += sep + os.path.basename(filename)
 
@@ -105,14 +105,14 @@ def upload_template(filename, destination, context=None, use_jinja=False,
             tb = traceback.format_exc()
             abort(tb + "\nUnable to import Jinja2 -- see above.")
     else:
-        with open(os.path.expanduser(filename)) as inputfile:
+        with open(filename) as inputfile:
             text = inputfile.read()
         if context:
             text = text % context
 
     # Back up original file
     if backup and exists(destination):
-        func("cp %s{,.bak}" % _expand_path(destination))
+        func("cp %s{,.bak}" % destination)
 
     # Upload the file.
     return put(
@@ -178,7 +178,6 @@ def sed(filename, before, after, limit='', use_sudo=False, backup='.bak',
         hasher.update(env.host_string)
         hasher.update(filename)
         tmp = "/tmp/%s" % hasher.hexdigest()
-        filename = _expand_path(filename)
         # Use temp file to work around lack of -i
         expr = r"""cp -p %(filename)s %(tmp)s \
 && sed -r -e '%(limit)ss/%(before)s/%(after)s/%(flags)sg' %(filename)s > %(tmp)s \
@@ -187,7 +186,7 @@ def sed(filename, before, after, limit='', use_sudo=False, backup='.bak',
         command = expr % locals()
     else:
         expr = r"sed -i%s -r -e '%ss/%s/%s/%sg' %s"
-        command = expr % (backup, limit, before, after, flags, _expand_path(filename))
+        command = expr % (backup, limit, before, after, flags, filename)
     return func(command, shell=shell)
 
 
@@ -315,7 +314,7 @@ def contains(filename, text, exact=False, use_sudo=False, escape=True,
         if exact:
             text = "^%s$" % text
     with settings(hide('everything'), warn_only=True):
-        egrep_cmd = 'egrep "%s" %s' % (text, _expand_path(filename))
+        egrep_cmd = 'egrep "%s" "%s"' % (text, filename)
         return func(egrep_cmd, shell=shell).succeeded
 
 
@@ -368,7 +367,7 @@ def append(filename, text, use_sudo=False, partial=False, escape=True,
                          shell=shell)):
             continue
         line = line.replace("'", r"'\\''") if escape else line
-        func("echo '%s' >> %s" % (line, _expand_path(filename)))
+        func("echo '%s' >> %s" % (line, filename))
 
 def _escape_for_regex(text):
     """Escape ``text`` to allow literal matching using egrep"""
@@ -380,6 +379,3 @@ def _escape_for_regex(text):
     # Whereas single quotes should not be escaped
     regex = regex.replace(r"\'", "'")
     return regex
-
-def _expand_path(path):
-    return '"$(echo %s)"' % path
