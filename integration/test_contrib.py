@@ -6,7 +6,7 @@ from fabric.contrib import files
 
 class Integration(object):
     def setup(self):
-        env.host_string = "localhost"
+        env.host_string = "127.0.0.1"
 
 
 def tildify(path):
