@@ -20,7 +20,7 @@ def expect_contains(path, value):
     assert files.contains(tildify(path), value)
 
 
-class TestTildeExpansion(object):
+class TestTildeExpansion(Integration):
     def test_append(self):
         for target in ('~/append_test', '~/append_test with spaces'):
             files.append(target, ['line'])
