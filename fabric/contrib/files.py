@@ -322,6 +322,8 @@ def contains(filename, text, exact=False, use_sudo=False, escape=True,
         egrep_cmd = 'egrep "%s" %s' % (text, _expand_path(filename))
         return func(egrep_cmd, shell=shell).succeeded
 
+def set_param_value(filename,text,category='',separator='',char='#'):
+    pass
 
 def append(filename, text, use_sudo=False, partial=False, escape=True,
     shell=False):
